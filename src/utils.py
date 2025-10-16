@@ -15,11 +15,23 @@ def format_fraction(frac):
 
 def normalize_expr(expr):
 	"""
-	表达式规范化（用于去重），如交换律、括号等。
-	这里只做简单字符串排序，复杂情况可用表达式树。
+	表达式规范化（用于去重），支持交换律和结合律。
+	输入为表达式树（tuple/int/Fraction），输出为唯一字符串。
 	"""
-	# TODO: 可扩展为表达式树的规范化
-	return ''.join(sorted(expr.replace(' ', '')))
+	def tree_key(e):
+		if isinstance(e, (int, Fraction)):
+			return str(Fraction(e))
+		op, left, right = e
+		# 交换律处理：+ ×
+		if op in ['+', '×']:
+			left_key = tree_key(left)
+			right_key = tree_key(right)
+			# 按字典序排列
+			children = sorted([left_key, right_key])
+			return f"{op}({children[0]},{children[1]})"
+		else:
+			return f"{op}({tree_key(left)},{tree_key(right)})"
+	return tree_key(expr)
 
 # 新增分数处理相关工具
 from fractions import Fraction

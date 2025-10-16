@@ -92,7 +92,7 @@ def generate(n, r):
 			if val < 0:
 				continue
 			expr_str = expr_to_str(expr)
-			norm = normalize_expr(expr_str)
+			norm = normalize_expr(expr)
 			if norm in expr_set:
 				continue
 			expr_set.add(norm)
