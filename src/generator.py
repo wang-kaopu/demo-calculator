@@ -2,6 +2,7 @@
 import random
 from fractions import Fraction
 from src.utils import format_fraction, normalize_expr
+from src.errors import FileOperationError, ParameterValidationError, RuleViolationError
 
 OPS = ['+', '-', '×', '÷']
 
@@ -78,6 +79,12 @@ def generate(n, r):
 	"""
 	生成n道四则运算题目，数值范围[0, r)，并写入Exercises.txt和Answers.txt。
 	"""
+	# 参数验证
+	if not isinstance(n, int) or not isinstance(r, int):
+		raise ParameterValidationError('n 和 r 必须为整数')
+	if n <= 0 or r <= 1:
+		raise ParameterValidationError('n 必须大于0，r 必须大于1')
+
 	questions = []
 	answers = []
 	expr_set = set()
@@ -98,13 +105,22 @@ def generate(n, r):
 			expr_set.add(norm)
 			questions.append(expr_str + ' =')
 			answers.append(format_fraction(val))
+		except RuleViolationError:
+			continue
 		except Exception:
 			continue
-	# 写入文件
-	with open('Exercises.txt', 'w', encoding='utf-8') as f:
-		for q in questions:
-			f.write(q + '\n')
-	with open('Answers.txt', 'w', encoding='utf-8') as f:
-		for a in answers:
-			f.write(a + '\n')
+	# 写入文件，捕获 I/O 并包装
+	try:
+		with open('Exercises.txt', 'w', encoding='utf-8') as f:
+			for q in questions:
+				f.write(q + '\n')
+		with open('Answers.txt', 'w', encoding='utf-8') as f:
+			for a in answers:
+				f.write(a + '\n')
+	except FileNotFoundError as e:
+		raise FileOperationError('写入文件失败，路径不存在', path=str(e))
+	except PermissionError as e:
+		raise FileOperationError('写入文件失败，权限被拒绝', path=str(e))
+	except Exception as e:
+		raise FileOperationError(f'写入文件时发生未知错误: {e}', path=None)
 	print(f"已生成{len(questions)}道题，写入Exercises.txt和Answers.txt")
